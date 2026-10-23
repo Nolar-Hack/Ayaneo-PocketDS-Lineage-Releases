@@ -5,10 +5,10 @@ A copy of the firmware that starts your Pocket DS (the boot chain `xbl`, `abl`, 
 calibration). Make it **once, before anything goes wrong**. If the console one day no longer starts at
 all, that copy is what lets you bring it back.
 
-> **Status: experimental.** The script reads the partition table the same way as the files that were used
-> to recover a console, and its output was checked against those files, but it has **not yet been run on a
-> console in EDL**. It only reads: it writes nothing to the console. If something looks wrong, stop and
-> ask before going on.
+> **Status.** `edl-backup.sh` was run on a Pocket DS in EDL (2026-10-23): 103 partitions, 3.9 GB, read in about two
+> minutes, every file checked for its full size and with matching checksums. Several firmware partitions came out
+> identical to dumps taken earlier from the same console. It only reads: it writes nothing to the console.
+> `edl-restore.sh` has **not been run on a console yet**: use its `--dry-run` first.
 
 ## What you need
 
@@ -75,5 +75,5 @@ at the first difference. It checks `SHA256SUMS` first, and it never writes `pers
 writes exact partitions. The steps and the cases are in the
 [install guide](https://claude.ai/artifact/DWn1DSxQ72MfHgZbC5ZeEJ), *Troubleshooting → If the console no longer starts at all*.
 
-> The restore script is, like the backup, **not yet run on a console in EDL**. The firmware list it writes is the one
-> that brought the development console back, and the write is verified before you start the console.
+> The restore script has **not been run on a console yet**. The firmware list it writes is the one that brought the
+> development console back, and the write is verified before you start the console.

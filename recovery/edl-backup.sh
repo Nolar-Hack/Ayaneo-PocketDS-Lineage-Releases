@@ -53,6 +53,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 OUT_DIR="${OUT_DIR:-./edl-backup-$(date +%Y%m%d-%H%M%S)}"
+mkdir -p "$OUT_DIR"
+OUT_DIR="$(cd "$OUT_DIR" && pwd)"          # absolute: fh_loader runs from inside it
+[[ -n "$TOOLS" ]] && TOOLS="$(readlink -f "$TOOLS")"
 run() { if $DRY_RUN; then echo "  would run: $*"; else "$@"; fi; }
 
 # --- the three tools ---------------------------------------------------------------------------
@@ -115,7 +118,8 @@ else
     fi
 fi
 
-FH=("$FH_LOADER" --noprompt --port="$PORT" --memoryname=UFS --search_path="$OUT_DIR" --zlpawarehost=1)
+# fh_loader writes what it reads into the current folder, not into --search_path: run it from the copy.
+fh() { ( cd "$OUT_DIR" && "$FH_LOADER" --noprompt --port="$PORT" --memoryname=UFS --search_path="$OUT_DIR" --zlpawarehost=1 "$@" ); }
 
 # --- the partition tables ----------------------------------------------------------------------
 info "Reading the partition table of each unit (LUN)"
@@ -127,7 +131,7 @@ GPT_XML="$OUT_DIR/gpt_reads.xml"
     done
     echo '</data>'
 } > "$GPT_XML"
-run "${FH[@]}" --convertprogram2read --sendxml="$GPT_XML"
+if $DRY_RUN; then echo "  would run: fh_loader --convertprogram2read --sendxml=$GPT_XML (from $OUT_DIR)"; else fh --convertprogram2read --sendxml="$GPT_XML"; fi
 
 if $DRY_RUN; then
     info "Dry run: nothing more can be done without the console (the table of partitions is read from it)."
@@ -144,7 +148,7 @@ python3 "$SCRIPT_DIR/edl-gpt-to-xml.py" "${ARGS[@]}"
 
 # --- the read -----------------------------------------------------------------------------------
 info "Reading the partitions (this takes a few minutes)"
-"${FH[@]}" --convertprogram2read --sendxml="$OUT_DIR/reads.xml" --showpercentagecomplete \
+fh --convertprogram2read --sendxml="$OUT_DIR/reads.xml" --showpercentagecomplete \
     | grep -E 'ERROR|Finished|percent files transferred' | grep -v wake_lock | tail -5 || true
 
 info "Checking that every partition was read in full"

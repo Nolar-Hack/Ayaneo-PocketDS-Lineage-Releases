@@ -47,6 +47,8 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
+[[ -d "$COPY" ]] && COPY="$(cd "$COPY" && pwd)"
+[[ -n "$TOOLS" ]] && TOOLS="$(readlink -f "$TOOLS")"
 [[ -d "$COPY" && -f "$COPY/restore.xml" ]] || die "--copy must be a safety copy folder made by edl-backup.sh (restore.xml inside)"
 [[ -n "$SETS$LABELS" ]] || die "Say what to write: --set firmware|android or --labels ..."
 [[ -z "$SETS" || "$SLOT" == a || "$SLOT" == b ]] || die "--set needs --slot a or --slot b"
@@ -114,12 +116,13 @@ if ! $SKIP_LOAD; then
     timeout 90 "$QSAHARA" -p "$PORT" -s "13:$PROGRAMMER" || die "The programmer did not load: unplug, EDL again, retry"
 fi
 
-FH=("$FH_LOADER" --noprompt --port="$PORT" --memoryname=UFS --search_path="$COPY" --zlpawarehost=1)
+# fh_loader writes what it reads into the current folder, not into --search_path: run it from the copy.
+fh() { ( cd "$COPY" && "$FH_LOADER" --noprompt --port="$PORT" --memoryname=UFS --search_path="$COPY" --zlpawarehost=1 "$@" ); }
 info "Writing"
-"${FH[@]}" --sendxml="$SEL" | grep -E 'ERROR|Finished' | grep -v wake_lock || true
+fh --sendxml="$SEL" | grep -E 'ERROR|Finished' | grep -v wake_lock || true
 info "Reading back to compare"
 rm -f "$COPY"/vf_*.bin
-"${FH[@]}" --convertprogram2read --sendxml="$VER" | grep -E 'ERROR|Finished' | grep -v wake_lock || true
+fh --convertprogram2read --sendxml="$VER" | grep -E 'ERROR|Finished' | grep -v wake_lock || true
 
 bad=0
 for f in $(grep -o 'filename="[^"]*"' "$SEL" | cut -d'"' -f2); do
