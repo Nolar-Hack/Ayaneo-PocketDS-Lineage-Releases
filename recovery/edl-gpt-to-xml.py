@@ -64,10 +64,55 @@ def check(xml, folder):
     return 1 if bad else 0
 
 
+# Never written back by the restore script: what is unique to the unit, the first boot loaders, the
+# partition tables and the user data.
+NEVER = {"persist", "modemst1", "modemst2", "fsg", "fsc", "devinfo", "userdata", "super", "metadata",
+         "xbl_a", "xbl_b", "xbl_config_a", "xbl_config_b", "multiimgoem_a", "multiimgoem_b",
+         "multiimgqti_a", "multiimgqti_b", "ddr", "storsec", "apdp_a", "apdp_b", "uefivarstore"}
+
+
+def select(xml, labels, out, verify_out, lenient=False):
+    want = [l for l in labels.split(",") if l]
+    if not (want and out and verify_out):
+        sys.exit("--labels, --out and --verify-out are needed")
+    refused = [l for l in want if l in NEVER or l.startswith("gpt")]
+    if refused:
+        sys.exit("not written by this script (unique to the unit, boot loader or partition table): "
+                 + ", ".join(refused))
+    keep, found = [], set()
+    for line in open(xml):
+        m = re.search(r'label="([^"]+)"', line)
+        if m and m.group(1) in want:
+            keep.append(line.rstrip("\n"))
+            found.add(m.group(1))
+    missing = [l for l in want if l not in found]
+    if missing:
+        print(("not in the copy, left out: " if lenient else "not in the copy: ") + ", ".join(missing),
+              file=sys.stderr)
+        if not lenient or not keep:
+            return 2
+    head = '<?xml version="1.0" ?>\n<data>\n'
+    with open(out, "w") as f:
+        f.write(head + "\n".join(keep) + "\n</data>\n")
+    with open(verify_out, "w") as f:
+        f.write(head + "\n".join(re.sub(r'filename="([^"]+)"', r'filename="vf_\1"', l)
+                                  for l in keep) + "\n</data>\n")
+    print("%d partitions selected" % len(keep))
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", nargs=2, metavar=("XML", "DIR"),
                     help="only check that every file of the XML is in DIR with its full size")
+    ap.add_argument("--select", metavar="RESTORE_XML",
+                    help="keep only the partitions named by --labels, write them to --out (to write back) "
+                         "and --verify-out (to read them back as vf_*)")
+    ap.add_argument("--labels", default="")
+    ap.add_argument("--lenient", action="store_true",
+                    help="a label that is not in the copy is only reported (for the preset sets)")
+    ap.add_argument("--out")
+    ap.add_argument("--verify-out")
     ap.add_argument("--gpt-dir")
     ap.add_argument("--reads")
     ap.add_argument("--restore")
@@ -77,6 +122,8 @@ def main():
     args = ap.parse_args()
     if args.check:
         sys.exit(check(*args.check))
+    if args.select:
+        sys.exit(select(args.select, args.labels, args.out, args.verify_out, args.lenient))
     if not (args.gpt_dir and args.reads and args.restore and args.table):
         ap.error("--gpt-dir, --reads, --restore and --table are needed")
     skip = set(SKIP_BY_DEFAULT) | {s for s in args.skip.split(",") if s}

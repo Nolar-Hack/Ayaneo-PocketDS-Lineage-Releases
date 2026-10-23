@@ -57,7 +57,23 @@ the unlock state `devinfo`). Do not post it or give it to anyone. Another person
 
 ## Using it for a recovery
 
-Writing the partitions back is not automated here, on purpose: a wrong write can make things worse. The
-steps that worked on the development console are in the
-[install guide](https://claude.ai/artifact/DWn1DSxQ72MfHgZbC5ZeEJ), section *Disaster recovery with EDL*.
-Read the whole section first and ask for help if you are not sure.
+When the console no longer starts, put it in EDL again and write back **only what is broken**, from your own copy.
+`edl-restore.sh` writes the partitions you choose, then reads them back and compares them with the copy; it stops
+at the first difference. It checks `SHA256SUMS` first, and it never writes `persist`, the modem calibration,
+`devinfo`, `xbl`, the partition tables or your data.
+
+```
+# what would be written (nothing is written)
+./edl-restore.sh --tools ~/Downloads/AR11_FlatBuild_….zip --copy ./edl-backup-… --slot a --set firmware --dry-run
+# the firmware of slot a
+./edl-restore.sh --tools ~/Downloads/AR11_FlatBuild_….zip --copy ./edl-backup-… --slot a --set firmware
+# if it still does not start: the Android images of that slot
+./edl-restore.sh --tools ~/Downloads/AR11_FlatBuild_….zip --copy ./edl-backup-… --slot a --set android
+```
+
+`--slot` is the slot that is broken (the one that was active). Do not restore a slot that works. `--labels abl_a,tz_a`
+writes exact partitions. The steps and the cases are in the
+[install guide](https://claude.ai/artifact/DWn1DSxQ72MfHgZbC5ZeEJ), *Troubleshooting → If the console no longer starts at all*.
+
+> The restore script is, like the backup, **not yet run on a console in EDL**. The firmware list it writes is the one
+> that brought the development console back, and the write is verified before you start the console.
