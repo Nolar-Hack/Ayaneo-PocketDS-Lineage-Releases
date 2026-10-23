@@ -1,3 +1,22 @@
+# Before you install, and if something goes wrong
+
+Helper scripts for the install guide. Get them with `git clone https://github.com/Nolar-Hack/Ayaneo-PocketDS-Lineage-Releases`,
+then open the `recovery` folder.
+
+| Script | What it does |
+|---|---|
+| `backup-stock.sh` | Copies your stock Android system, partition by partition, over `adb` (needs root on the stock system). Run it **before installing**. |
+| `restore-stock.sh <copy folder>` | Puts that stock system back, from fastbootd. It wipes your data. |
+| `edl-backup.sh` | Read-only copy of the firmware that starts the console, in EDL (below). Run it before installing too. |
+| `edl-restore.sh` | Writes chosen firmware partitions back from that copy, for a console that no longer starts. |
+
+```
+./backup-stock.sh                 # needs the console running its stock system, adb connected, su available
+```
+Keep every copy on a second disk and never share them: they hold data that is unique to your console.
+
+---
+
 # Safety copy of the console's firmware (EDL)
 
 A copy of the firmware that starts your Pocket DS (the boot chain `xbl`, `abl`, `tz`, `hyp`, `aop`,
