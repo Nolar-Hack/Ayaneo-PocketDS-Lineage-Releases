@@ -10,6 +10,8 @@ then open the `recovery` folder.
 | `edl-backup.sh` | Read-only copy of the firmware that starts the console, in EDL (below). Run it before installing too. |
 | `edl-restore.sh` | Writes chosen firmware partitions back from that copy, for a console that no longer starts. |
 
+**On Windows:** see [windows/](windows/). `edl-backup.bat` makes the EDL copy **without root**, so it works on a console that was never modified: it is the copy to make first.
+
 ```
 ./backup-stock.sh                 # needs the console running its stock system, adb connected, su available
 ```
