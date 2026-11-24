@@ -8,3 +8,5 @@ Unofficial LineageOS 24 (Android 17) builds for the Ayaneo Pocket DS, with their
 - Downloads: see [Releases](../../releases). Use the `-full.zip` for a new installation or an update from any version. An `-incremental.zip` only applies to the build named in its release notes.
 - Updates: PocketDS Extra → System update reads `update.json` from the latest release of this repository.
 - Safety copy of your console's firmware (read-only, in EDL, no root needed): see [recovery/](recovery/) on Linux, [recovery/windows/](recovery/windows/) on Windows. Make it once, before you need it.
+- Community: questions, bugs, ideas and release announcements on Discord, https://discord.gg/mG8xu7pA42
+- Source of the ROM (device tree, patches, PocketDS Extra): https://github.com/Nolar-Hack/Ayaneo-PocketDS-Lineage
